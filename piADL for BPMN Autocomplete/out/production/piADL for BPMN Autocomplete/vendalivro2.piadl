@@ -1,0 +1,331 @@
+component Inicio is abstraction (){
+	connection saida is out(Integer)
+	protocol is{
+		(via saida send Integer)*
+	}
+	behavior is{
+		via saida send 0
+		behavior()
+	}
+}
+
+connector Fluxo1 is abstraction (){
+	connection deInicio is in(Integer)
+	connection paraOrdemCompra is out(Integer)
+	protocol is {
+		(via deInicio receive Integer
+			via paraOrdemCompra send Integer
+		)*
+	}
+	behavior is {
+		via deInicio receive x :Integer
+		via paraOrdemCompra send x
+		behavior()
+	}
+}
+component OrdemCompra is abstraction (){
+	connection entradaT is in(Integer)
+	connection cliente is in(String)
+	connection atendimento is out(String)
+	connection saidaT is out(String)
+	protocol is {
+		(via entradaT receive Integer  via cliente receive String 
+			via atendimento send String  via saidaT send String )*
+	}
+	behavior is{
+		via entradaT receive i : Integer
+		via cliente receive pedido : String
+		via atendimento send pedido
+		via saidaT send pedido
+		behavior()
+	}
+}
+connector Fluxo2 is abstraction (){
+	connection deOrdemCompra is in(String)
+	connection paraVerificarEstoque is out(String)
+	protocol is {
+		(via deOrdemCompra receive String | via paraVerificarEstoque send String)*
+	}
+	behavior is {
+		via deOrdemCompra receive x : String
+		via paraVerificarEstoque send x
+		behavior()
+	}
+}
+component VerificarEstoque is abstraction (){
+	connection entradaT2 is in(String)
+	connection atendimento2 is in(String)
+	connection atendimento3 is out(Boolean)
+	connection estoque is out(String)
+	connection estoque2 is in(Boolean)
+	connection saidaT2 is out(Boolean)
+	protocol is {
+		(via entradaT2 receive String | via atendimento2 receive String|
+			via atendimento3 send Boolean | via estoque2 receive Boolean | 
+			via estoque send String | via saidaT2 send Boolean)*
+	}
+	behavior is{
+		via entradaT2 receive pedido : String
+		via atendimento2 receive estado_est : String
+		via estoque send estado_est
+		via estoque2 receive resposta : Boolean
+		via atendimento3 send resposta
+		via saidaT2 send resposta
+		behavior()
+	}
+}
+connector Fluxo3 is abstraction (){
+	connection deVerificarEstoque is in(Boolean)
+	connection paraGateway is out(Boolean)
+	protocol is {
+		(via deVerificarEstoque receive Boolean | via paraGateway send Boolean)*
+	}
+	behavior is {
+		via deVerificarEstoque receive x : Boolean
+		via paraGateway send x
+		behavior()
+	}
+}
+component Gateway is abstraction (){
+	connection entradaG is in(Boolean)
+	connection saidaG is out(Boolean)
+	connection saida2G is out(Boolean)
+	protocol is {
+		((via entradaG receive Boolean
+		  via saidaG send Boolean) | 
+		 (via entradaG receive Boolean
+		 	via saida2G send Boolean))*
+	}
+	behavior is{
+		via entradaG receive resposta : Boolean
+		if resposta == true then{
+			via saida2G send resposta
+			behavior()
+		} else{
+			via saidaG send resposta
+			behavior()
+		}
+	}
+}
+connector Fluxo4 is abstraction (){
+	connection deGateway is in(Boolean)
+	connection paraEncomendarObras is out(Boolean)
+	protocol is {
+		(via deGateway receive Boolean | via paraEncomendarObras send Boolean)*
+	}
+	behavior is {
+		via deGateway receive x : Boolean
+		via paraEncomendarObras send x
+		behavior()
+	}
+}
+connector Fluxo5 is abstraction (){
+	connection deGateway is in(Boolean)
+	connection paraGateway2 is out(Boolean)
+	protocol is {
+		(via deGateway receive Boolean | via paraGateway2 send Boolean)*
+	}
+	behavior is {
+		via deGateway receive x : Boolean
+		via paraGateway2 send x
+		behavior()
+	}
+}
+component EncomendarObras is abstraction () {
+	connection entradaT3 is in(Boolean)
+	connection atendimento4 is in(String)
+	connection fornecedor is out(String)
+	connection fornecedor2 is in(String)
+	connection atendimento5 is out(String)
+	connection saidaT3 is out(String) 
+	protocol is {
+		( via entradaT3 receive Boolean | via atendimento4 receive String | via fornecedor send String |
+			via fornecedor2 receive String | via atendimento5 send String | via saidaT3 send String )*
+	}
+	behavior is{
+		via entradaT3 receive resposta : Boolean
+		via atendimento4 receive pedido : String
+		via fornecedor send pedido
+		via fornecedor2 receive produtos : String
+		via atendimento5 send produtos
+		via saidaT3 send produtos
+		behavior()		
+	}
+	
+}
+connector Fluxo6 is abstraction (){
+	connection deEncomendarObras is in(String)
+	connection paraGateway2 is out(String)
+	protocol is {
+		(via deEncomendarObras receive String | via paraGateway2 send String)*
+	}
+	behavior is {
+		via deEncomendarObras receive x : String
+		via paraGateway2 send x
+		behavior()
+	}
+}
+component Gateway2 is abstraction (){
+	connection entradaG2 is in(Boolean)
+	connection entrada2G2 is in(String)
+	connection saidaG2 is out(String)
+	protocol is {
+		((via entradaG2 receive Boolean
+			via saidaG2 send String) |
+			( via entrada2G2 receive String
+				via saidaG2 send String)*
+	}
+	behavior is{
+		produto is function(p: Boolean) : String{
+			return("pedido")
+		}
+		choose {
+			via entradaG2 receive pedido : Boolean
+			via saidaG2 send produto(pedido)
+			behavior()
+			or 
+			via entrada2G2 receive produtos: String
+			via saidaG2 send produtos
+			behavior()
+		}
+	}
+}
+connector Fluxo7 is abstraction (){
+	connection deGateway2 is in(String)
+	connection paraPagamento is out(String)
+	protocol is {
+		(via deGateway2 receive String | via paraPagamento send String)*
+	}
+	behavior is {
+		via deGateway2 receive x : String
+		via paraPagamento send x
+		behavior()
+	}
+}
+component Pagamento is abstraction (){
+	connection entradaT4 is in(String)
+	connection financeiro is in(String)
+	connection cliente2 is out(String)
+	connection cliente3 is in(String)
+	connection financeiro2 is out(String)
+	connection saidaT4 is out(String)
+	protocol is {
+		( via entradaT4 receive String | via financeiro receive String | via cliente2 send String | 
+			via cliente3 receive String | via financeiro2 send String | via saidaT4 send String )*
+	}
+	behavior is {
+		fatura is function (x : String) : String {
+			unobservable
+		}
+		via entradaT4 receive produto : String
+		via financeiro receive boleto : String
+		via cliente2 send boleto
+		via cliente3 receive pagamento : String
+		via financeiro2 send pagamento
+		via saidaT4 send pagamento
+		behavior()
+	}
+}
+connector Fluxo8 is abstraction (){
+	connection dePagamento is in(String)
+	connection paraEntregar is out(String)
+	protocol is {
+		(via dePagamento receive String | via paraEntregar send String)*
+	}
+	behavior is {
+		via dePagamento receive x : String
+		via paraEntregar send x
+		behavior()
+	}
+}
+component Entregar is abstraction () {
+	connection entradaT5 is in(String)
+	connection expedicao is in(String)
+	connection cliente4 is out(String)
+	connection cliente5 is in(String)
+	connection expedicao2 is out(String)
+	connection saidaT5 is out(String)
+	protocol is {
+		(via entradaT5 receive String | via expedicao receive String | via cliente4 send String |
+			via cliente5 receive String | via expedicao2 send String | via saidaT5 send String)*
+	}
+	behavior is {
+		via entradaT5 receive pagamento : String
+			via expedicao receive produtos : String
+			via cliente4 send produtos
+			via cliente5 receive confirmacao : String
+			via expedicao2 send confirmacao
+		via saidaT5 send confirmacao
+		behavior()
+	}
+}
+connector Fluxo9 is abstraction (){
+	connection deEntregar  is in(String)
+	connection paraFim  is out(String)
+	protocol is {
+		(via deEntregar  receive String | via paraFim  send String)*
+	}
+	behavior is {
+		via deEntregar receive x : String
+		via paraFim  send x
+		behavior()
+	}
+}
+component Fim is abstraction (){
+	connection entrada is in(String)
+	protocol is {
+		(via entrada receive String)*
+	}
+	behavior is {
+		via entrada receive produtos : String
+		done
+	}
+}
+
+architecture Venda is abstraction () {
+	behavior is {
+		compose{
+			i is Inicio()
+			and fl1 is Fluxo1()
+			and t is OrdemCompra()
+			and fl2 is Fluxo2()
+			and t2 is VerificarEstoque()
+			and fl3 is Fluxo3()
+			and gw is Gateway()
+			and fl4 is Fluxo4()
+			and fl5 is Fluxo5()
+			and t3 is EncomendarObras()
+			and fl6 is Fluxo6()
+			and gw2 is Gateway2()
+			and fl7 is Fluxo7()
+			and t4 is Pagamento()
+			and fl8 is Fluxo8()
+			and t5 is Entregar()
+			and fl9 is Fluxo9()
+			and f is Fim()
+		} where {
+			i::saida unifies fl1::deInicio
+			fl1::paraOrdemCompra unifies t::entradaT
+			t::saidaT unifies fl2::deOrdemCompra
+			fl2::paraVerificarEstoque unifies t2::entradaT2
+			t2::saidaT2 unifies fl3::deVerificarEstoque
+			fl3::paraGateway unifies gw::entradaG
+			gw::saidaG unifies fl4::deGateway
+			fl4::paraEncomendarObras unifies t3::entradaT3
+			t3::saidaT3 unifies fl6::deEncomendarObras
+			fl6::paraGateway2 unifies gw2::entrada2G2
+			gw::saida2G unifies fl5::deGateway
+			fl5::paraGateway2 unifies gw2::entradaG2 
+			gw2::saidaG2 unifies fl7::deGateway2
+			fl7::paraPagamento unifies t4::entradaT4
+			t4::saidaT4 unifies fl8::dePagamento 
+			fl8::paraEntregar unifies t5::entradaT5
+			t5::saidaT5 unifies fl9::deEntregar
+			fl9::paraFim unifies f::entrada
+		}
+		
+	}
+}
+behavior is{
+	become(Venda())
+}
